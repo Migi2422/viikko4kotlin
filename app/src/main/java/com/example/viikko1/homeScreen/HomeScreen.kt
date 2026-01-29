@@ -1,5 +1,6 @@
 package com.example.viikko1.homeScreen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,10 +22,25 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: TaskViewModel = viewModel()
 ) {
-    val tasks = viewModel.tasks
+    val tasks by viewModel.tasks.collectAsState()
     val today = LocalDate.now().toString()
 
     var newTaskTitle by remember { mutableStateOf("") }
+    var newTaskDescription by remember { mutableStateOf("") }
+    var selectedTask by remember { mutableStateOf<Task?>(null) }
+
+    if (selectedTask != null) {
+        DetailDialog(
+            task = selectedTask!!,
+            onDismiss = { selectedTask = null },
+            onUpdate = { viewModel.updateTask(it) },
+            onDelete = { viewModel.removeTask(selectedTask!!.id)
+            selectedTask = null}
+
+        )
+    }
+
+
 
     Column(modifier.padding(16.dp)) {
 
@@ -35,6 +51,13 @@ fun HomeScreen(
             value = newTaskTitle,
             onValueChange = { newTaskTitle = it },
             label = { Text("New task title") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        TextField(
+            value = newTaskDescription,
+            onValueChange = { newTaskDescription = it },
+            label = { Text("New task description") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -49,39 +72,25 @@ fun HomeScreen(
                         Task(
                             id = newId,
                             title = newTaskTitle,
-                            description = "",
+                            description = newTaskDescription,
                             priority = 1,
                             dueDate = today,
                             done = false
                         )
                     )
                     newTaskTitle = ""
+                    newTaskDescription = ""
                 }
             }
         ) {
             Text("Add task")
         }
 
-        Spacer(Modifier.height(16.dp))
 
-        // Sort-nappi
-        Button(onClick = { viewModel.sortByDueDate() }) {
-            Text("Sort by due date")
-        }
 
-        Spacer(Modifier.height(8.dp))
-
-        // Filter-nappi
-        Button(onClick = { viewModel.filterByDone(true) }) {
-            Text("Show only done tasks")
-        }
-        Button(onClick = { viewModel.resetFilter() }) {
-            Text("Show all tasks")
-        }
 
         Spacer(Modifier.height(16.dp))
 
-        // Tehtävälista
         LazyColumn {
             items(tasks) { task ->
                 Row(
@@ -90,20 +99,20 @@ fun HomeScreen(
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Checkbox done-tilalle
+
                     Checkbox(
                         checked = task.done,
                         onCheckedChange = { viewModel.toggleDone(task.id) }
                     )
 
-                    // Tehtävän nimi
                     Text(
                         text = "${task.title} (${task.dueDate})",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { selectedTask = task }
                     )
 
 
-                    // Poista-nappi
                     Button(onClick = { viewModel.removeTask(task.id) }) {
                         Text("Delete")
                     }
@@ -115,3 +124,52 @@ fun HomeScreen(
     }
 }
 
+
+
+@Composable
+fun DetailDialog(
+    task: Task,
+    onDismiss: () -> Unit,
+    onUpdate: (Task) -> Unit,
+    onDelete: () -> Unit
+) {
+    var title by remember { mutableStateOf(task.title) }
+    var description by remember { mutableStateOf(task.description) }
+
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Task") },
+        text = {
+            Column {
+                TextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") }
+                )
+                TextField(value = description, onValueChange = {description = it}, label = { Text("Description") })
+
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onUpdate(task.copy(title = title, description = description))
+                onDismiss()
+            }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+
+            Row { Button(onClick = onDelete) {
+                Text("Delete")
+            }
+                Spacer(Modifier.width(8.dp))
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    }
+
+    )
+}

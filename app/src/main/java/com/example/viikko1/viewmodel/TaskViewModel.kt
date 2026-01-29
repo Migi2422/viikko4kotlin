@@ -1,50 +1,35 @@
 package com.example.viikko1.viewmodel
 
-import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import com.example.viikko1.domain.Task
 import com.example.viikko1.domain.mockTasks
+import kotlinx.coroutines.flow.map
 
 class TaskViewModel : ViewModel() {
 
-    // Aktiivinen lista UI:lle
-    var tasks by mutableStateOf(listOf<Task>())
-        private set
-
-    // Alkuperäinen lista suodatuksen palauttamiseen
-    private var originalTasks = listOf<Task>()
-
-    init {
-        tasks = mockTasks
-        originalTasks = mockTasks
-    }
+    private val _tasks = MutableStateFlow(mockTasks)
+    val tasks: StateFlow<List<Task>> = _tasks
 
     fun addTask(task: Task) {
-        originalTasks = originalTasks + task
-        tasks = originalTasks
+        _tasks.value = _tasks.value + task
     }
 
     fun toggleDone(id: Int) {
-        originalTasks = originalTasks.map { t ->
-            if (t.id == id) t.copy(done = !t.done) else t
+        _tasks.value = _tasks.value.map {
+            if (it.id == id) it.copy(done = !it.done) else it
         }
-        tasks = originalTasks
     }
 
     fun removeTask(id: Int) {
-        originalTasks = originalTasks.filter { it.id != id }
-        tasks = originalTasks
+        _tasks.value = _tasks.value.filter { it.id != id }
     }
 
-    fun filterByDone(done: Boolean) {
-        tasks = originalTasks.filter { it.done == done }
+    fun updateTask(updated: Task) {
+        _tasks.value = _tasks.value.map {
+            if (it.id == updated.id) updated else it
+        }
     }
 
-    fun sortByDueDate() {
-        tasks = originalTasks.sortedBy { it.dueDate }
-    }
-
-    fun resetFilter() {
-        tasks = originalTasks
-    }
 }

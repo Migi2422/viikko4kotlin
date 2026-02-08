@@ -16,17 +16,17 @@ Molemmat ruudut lukevat samaa tasks-tilaa collectAsState()-kutsulla.
 ## CalendarScreen
 Tehtävät ryhmitellään päivämäärän mukaan:
 
-```kotlin
+kotlin
 val grouped = tasks.groupBy { it.dueDate }
 
 ## Miten AlertDialog hoitaa addTask ja editTask
 
-#addTask:  
+# addTask:  
 - Avautuu “Add task” ‑painikkeesta  
 - Käyttäjä syöttää otsikon ja kuvauksen  
 - Tallennus kutsuu `viewModel.addTask()`  
 
-#editTask:  
+# editTask:  
 - Avautuu, kun käyttäjä klikkaa olemassa olevaa tehtävää  
 - Kentät esitäytetään valitun tehtävän tiedoilla  
 - Tallennus kutsuu `viewModel.updateTask()`  

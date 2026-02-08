@@ -20,7 +20,7 @@ import java.time.LocalDate
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: TaskViewModel = viewModel()
+    viewModel: TaskViewModel
 ) {
     val tasks by viewModel.tasks.collectAsState()
     val today = LocalDate.now().toString()
